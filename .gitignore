@@ -1,0 +1,126 @@
+# Build directories
+build/
+bin/
+lib/
+out/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Visual Studio files
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.suo
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+*.lib
+*.sbr
+*.sdf
+*.opensdf
+*.unsuccessfulbuild
+ipch/
+*.idb
+*.pgc
+*.pgd
+*.rsp
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.log
+*.svclog
+*.scc
+
+# GCC/Clang compiled files
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+*.a
+
+# Debug files
+*.pdb
+*.dSYM/
+
+# Temporary files
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Package managers
+vcpkg_installed/
+conan/
+.conan/
+
+# Dependencies (if using git submodules, you might want to track these)
+third_party/
+external/
+deps/
+
+# Generated documentation
+docs/html/
+docs/latex/
+
+# Profiling and analysis
+*.prof
+*.gprof
+callgrind.out.*
+massif.out.*
+
+# Test results
+test_results/
+coverage/
+*.gcov
+*.gcda
+*.gcno
+
+# Platform specific
+*.app
+*.dmg
+*.pkg
+*.deb
+*.rpm
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Log files
+*.log
+logs/
+
+# Configuration files that might contain sensitive data
+config.local.*
+secrets.*
+.env
