@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Project definition
-project(NecrosisEngine 
+project(NecrosisEngine
     VERSION 1.0.0
     DESCRIPTION "High-performance 2D sand simulation engine"
     LANGUAGES CXX
@@ -76,19 +76,78 @@ else()
     find_package(Threads REQUIRED)
 endif()
 
+# Feature configuration options (for user control)
+# These define the cached, user-configurable options.
+# Defaults are set for a typical debug-first workflow.
+option(NECROSIS_ENABLE_CHEAT_SYSTEM "Enable cheat system" ON)
+option(NECROSIS_ENABLE_DEBUG_OVERLAY "Enable debug overlay system" ON)
+option(NECROSIS_ENABLE_CONSOLE_COMMANDS "Enable console command system" ON)
+option(NECROSIS_ENABLE_PERFORMANCE_METRICS "Enable performance metrics collection" OFF)
+
+# Determine the EFFECTIVE settings for this build based on build type.
+# This allows us to force-disable debug features in Release builds,
+# regardless of what the cached option() is set to.
+set(EFFECTIVE_CHEAT_SYSTEM ${NECROSIS_ENABLE_CHEAT_SYSTEM})
+set(EFFECTIVE_DEBUG_OVERLAY ${NECROSIS_ENABLE_DEBUG_OVERLAY})
+set(EFFECTIVE_CONSOLE_COMMANDS ${NECROSIS_ENABLE_CONSOLE_COMMANDS})
+# Performance metrics can be enabled in any build, so we just use its value directly.
+set(EFFECTIVE_PERFORMANCE_METRICS ${NECROSIS_ENABLE_PERFORMANCE_METRICS})
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    # In Release mode, always disable these features.
+    set(EFFECTIVE_CHEAT_SYSTEM OFF)
+    set(EFFECTIVE_DEBUG_OVERLAY OFF)
+    set(EFFECTIVE_CONSOLE_COMMANDS OFF)
+endif()
+
+# Pass the effective values to the preprocessor.
+# We define the macros only when features are enabled (not when OFF)
+if(EFFECTIVE_CHEAT_SYSTEM)
+    add_compile_definitions(NECROSIS_CHEAT_SYSTEM_ENABLED=1)
+endif()
+
+if(EFFECTIVE_DEBUG_OVERLAY)
+    add_compile_definitions(NECROSIS_DEBUG_OVERLAY_ENABLED=1)
+endif()
+
+if(EFFECTIVE_CONSOLE_COMMANDS)
+    add_compile_definitions(NECROSIS_CONSOLE_COMMANDS_ENABLED=1)
+endif()
+
+if(EFFECTIVE_PERFORMANCE_METRICS)
+    add_compile_definitions(NECROSIS_PERFORMANCE_METRICS_ENABLED=1)
+endif()
+
 # Include directories
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-# For now, build a simple executable with main.cpp
-# As the project grows, this will be refactored into separate engine library + executable
+# NOTE: The configure_file() step is no longer needed if you use add_compile_definitions()
+# as shown above, which is often simpler. If you prefer the header, you can keep it,
+# but make sure it uses the EFFECTIVE_ variables. I will comment it out in favor
+# of the more direct add_compile_definitions approach.
+
+# configure_file(
+#     "${CMAKE_CURRENT_SOURCE_DIR}/include/necrosis/features.h.in"
+#     "${CMAKE_CURRENT_BINARY_DIR}/include/necrosis/features.h"
+#     @ONLY
+# )
+# include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 
 # Current source files
 set(NECROSIS_SOURCES
     src/main.cpp
+    # Note: I removed the duplicate addition of cheat.cpp
 )
+
+# Conditionally add feature-specific source files using the effective variable
+if(EFFECTIVE_CHEAT_SYSTEM)
+    list(APPEND NECROSIS_SOURCES
+        src/cheat-system/cheat.cpp
+    )
+endif()
 
 # Create the main executable
 add_executable(necrosis_engine ${NECROSIS_SOURCES})
@@ -103,62 +162,7 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(necrosis_engine PRIVATE Threads::Threads)
 endif()
 
-# Future engine library structure (commented out for now):
-# When you have more source files, uncomment and modify this section:
-#
-# set(NECROSIS_ENGINE_SOURCES
-#     src/core/Engine.cpp
-#     src/simulation/PixelGrid.cpp
-#     src/simulation/MaterialSystem.cpp
-#     src/physics/RigidBodySystem.cpp
-#     src/physics/PhysicsWorld.cpp
-#     src/rendering/RenderSystem.cpp
-#     src/input/InputManager.cpp
-#     src/utils/ThreadPool.cpp
-#     src/utils/Memory.cpp
-# )
-#
-# set(NECROSIS_ENGINE_HEADERS
-#     include/necrosis/Engine.h
-#     include/necrosis/PixelGrid.h
-#     include/necrosis/MaterialSystem.h
-#     include/necrosis/RigidBodySystem.h
-#     include/necrosis/PhysicsWorld.h
-#     include/necrosis/RenderSystem.h
-#     include/necrosis/InputManager.h
-#     include/necrosis/ThreadPool.h
-#     include/necrosis/Memory.h
-# )
-#
-# if(NECROSIS_BUILD_SHARED)
-#     add_library(necrosis_engine_lib SHARED ${NECROSIS_ENGINE_SOURCES} ${NECROSIS_ENGINE_HEADERS})
-#     target_compile_definitions(necrosis_engine_lib PRIVATE NECROSIS_EXPORTS)
-#     target_compile_definitions(necrosis_engine_lib PUBLIC NECROSIS_SHARED)
-# else()
-#     add_library(necrosis_engine_lib STATIC ${NECROSIS_ENGINE_SOURCES} ${NECROSIS_ENGINE_HEADERS})
-# endif()
-#
-# add_executable(necrosis_test src/main.cpp)
-# target_link_libraries(necrosis_test PRIVATE necrosis_engine_lib)
-
-# Future dependency management (commented out until needed)
-# These will be uncommented and configured as development progresses
-
-# SDL2 for input and audio (as specified in PRD)
-# find_package(SDL2 REQUIRED)
-# target_link_libraries(necrosis_engine PRIVATE SDL2::SDL2 SDL2::SDL2main)
-
-# Graphics framework options (The-Forge, BGFX, etc.)
-# These will be added based on the chosen graphics backend
-
-# OpenGL support (initial backend as per PRD)
-# find_package(OpenGL REQUIRED)
-# target_link_libraries(necrosis_engine PRIVATE OpenGL::GL)
-
-# DirectX support (Windows)
-# if(WIN32)
-#     target_link_libraries(necrosis_engine PRIVATE d3d11 dxgi)
-# endif()
+# ... (rest of your file is fine) ...
 
 # Set working directory for debugging
 set_target_properties(necrosis_engine PROPERTIES
@@ -175,12 +179,6 @@ endif()
 install(TARGETS necrosis_engine
     RUNTIME DESTINATION bin
 )
-
-# Future: Install headers when engine becomes a library
-# install(DIRECTORY include/
-#     DESTINATION include
-#     FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp"
-# )
 
 # CPack configuration for packaging
 set(CPACK_PACKAGE_NAME "NecrosisEngine")
@@ -200,4 +198,15 @@ message(STATUS "Build tests: ${NECROSIS_BUILD_TESTS}")
 message(STATUS "Build examples: ${NECROSIS_BUILD_EXAMPLES}")
 message(STATUS "Platform: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER_ID}")
+message(STATUS "")
+message(STATUS "--- User Options (from cache) ---")
+message(STATUS "Cheat system preference: ${NECROSIS_ENABLE_CHEAT_SYSTEM}")
+message(STATUS "Debug overlay preference: ${NECROSIS_ENABLE_DEBUG_OVERLAY}")
+message(STATUS "Console commands preference: ${NECROSIS_ENABLE_CONSOLE_COMMANDS}")
+message(STATUS "")
+message(STATUS "=== Effective Feature Configuration ===")
+message(STATUS "Cheat system: ${EFFECTIVE_CHEAT_SYSTEM}")
+message(STATUS "Debug overlay: ${EFFECTIVE_DEBUG_OVERLAY}")
+message(STATUS "Console commands: ${EFFECTIVE_CONSOLE_COMMANDS}")
+message(STATUS "Performance metrics: ${EFFECTIVE_PERFORMANCE_METRICS}")
 message(STATUS "=====================================")

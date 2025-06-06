@@ -1,0 +1,43 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "debug",
+            "displayName": "Debug Configuration",
+            "description": "Debug build with all features enabled",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "NECROSIS_ENABLE_CHEAT_SYSTEM": "ON",
+                "NECROSIS_ENABLE_DEBUG_OVERLAY": "ON",
+                "NECROSIS_ENABLE_CONSOLE_COMMANDS": "ON",
+                "NECROSIS_ENABLE_PERFORMANCE_METRICS": "OFF"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Release Configuration", 
+            "description": "Optimized release build with debug features disabled",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "NECROSIS_ENABLE_CHEAT_SYSTEM": "ON",
+                "NECROSIS_ENABLE_DEBUG_OVERLAY": "ON", 
+                "NECROSIS_ENABLE_CONSOLE_COMMANDS": "ON",
+                "NECROSIS_ENABLE_PERFORMANCE_METRICS": "OFF"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug",
+            "displayName": "Build Debug"
+        },
+        {
+            "name": "release", 
+            "configurePreset": "release",
+            "displayName": "Build Release"
+        }
+    ]
+}
